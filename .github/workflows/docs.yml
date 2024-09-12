@@ -57,7 +57,7 @@ jobs:
           cargo doc
           cd ..
           mkdir docout
-          mv zephyr-rust-lang-build/rust/target/thumbv7em-none-eabi/doc docout/nostd
+          mv build/rust/target/thumbv7em-none-eabi/doc docout/nostd
 
       - name: Build build documentation
         working-directory: zephyr-rust-lang
