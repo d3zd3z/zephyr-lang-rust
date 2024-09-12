@@ -4,13 +4,13 @@
 [package]
 # This must be rustapp for now.
 name = "rustapp"
-version = "0.1.0"
+version = "3.7.0"
 edition = "2021"
-description = "A sample hello world application in Rust"
+description = "A small application to generate documentation"
 license = "Apache-2.0 or MIT"
 
 [lib]
 crate-type = ["staticlib"]
 
 [dependencies]
-zephyr = "0.1.0"
+zephyr = "3.7.0"
