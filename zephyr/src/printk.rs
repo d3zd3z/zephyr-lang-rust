@@ -3,6 +3,14 @@
 
 //! Printk implementation for Rust.
 //!
+//! The Zephyr configuration `CONFIG_PRINTK` must be enabled for this functionality to be present.
+//!
+//! This module provides two macros: [`printk`] and [`printkln`]. These are analagous to
+//! [`std::print`](https://doc.rust-lang.org/std/macro.print.html) and
+//! [`std::println`](https://doc.rust-lang.org/std/macro.println.html) macros.
+//!
+//! These will print messages through Zephyr's `printk` functionality.
+//!
 //! This uses the `k_str_out` syscall, which is part of printk to output to the console.
 
 use core::fmt::{
@@ -12,6 +20,14 @@ use core::fmt::{
     write,
 };
 
+/// Print to Zephyr's console.
+///
+/// Equivalent to the [`printkln!`] macro except that a newline is not printed at the end of the
+/// message.
+///
+/// Note that printk access in Zephyr are uncoordinated unless `CONFIG_PRINTK_SYNC` is enabled.
+/// Even in this case, because of mismatches between Rust and C's message formatting, messages from
+/// Rust may not be as well synchronized, even when this is defined.
 #[macro_export]
 macro_rules! printk {
     ($($arg:tt)*) => {{
