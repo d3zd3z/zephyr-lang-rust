@@ -55,11 +55,21 @@ jobs:
           ln -s ../../build/rust/sample-cargo-config.toml config.toml
           cd ..
           cargo doc
+          cd ..
+          mkdir docout
+          mv zephyr-rust-lang-build/rust/target/thumbv7em-none-eabi/doc docout/nostd
+
+      - name: Build build documentation
+        working-directory: zephyr-rust-lang
+        run: |
+          cd zephyr-build
+          cargo doc
+          mv target/doc ../docout/std
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: zephyr-rust-lang/build/rust/target/thumbv7em-none-eabi/doc
+          path: zephyr-rust-lang/docout
 
   deploy:
     needs: generate-docs
