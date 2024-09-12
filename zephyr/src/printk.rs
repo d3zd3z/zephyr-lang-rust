@@ -5,7 +5,7 @@
 //!
 //! The Zephyr configuration `CONFIG_PRINTK` must be enabled for this functionality to be present.
 //!
-//! This module provides two macros: [`printk`] and [`printkln`]. These are analagous to
+//! This module provides two macros: [`crate::printk!`] and [`crate::printkln!`]. These are analagous to
 //! [`std::print`](https://doc.rust-lang.org/std/macro.print.html) and
 //! [`std::println`](https://doc.rust-lang.org/std/macro.println.html) macros.
 //!
@@ -22,7 +22,7 @@ use core::fmt::{
 
 /// Print to Zephyr's console.
 ///
-/// Equivalent to the [`printkln!`] macro except that a newline is not printed at the end of the
+/// Equivalent to the [`crate::printkln!`] macro except that a newline is not printed at the end of the
 /// message.
 ///
 /// Note that printk access in Zephyr are uncoordinated unless `CONFIG_PRINTK_SYNC` is enabled.
@@ -35,6 +35,9 @@ macro_rules! printk {
     }};
 }
 
+/// Print to Zephyr's console.
+///
+/// TODO
 #[macro_export]
 macro_rules! printkln {
     ($($arg:tt)*) => {{
