@@ -118,7 +118,8 @@ fn panic(info :&PanicInfo) -> ! {
     }
 }
 
-/// Re-export of zephyr-sys as `zephyr::raw`.
+/// Re-export of zephyr-sys as `zephyr::raw`.  Generally, most users of zephyr will use
+/// `zephyr::raw` instead of directly importing the zephyr-sys crate.
 pub mod raw {
     pub use zephyr_sys::*;
 }

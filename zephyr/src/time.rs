@@ -34,14 +34,21 @@ use core::fmt::Debug;
 compile_error!("Rust does not (yet) support dynamic frequency timer");
 
 // Given the above not defined, the system time base comes from a kconfig.
-/// The system time base.  The system clock has this many ticks per second.
+/// The system time base.  The system clock has this many ticks per second.  Values such as
+/// timeouts are defined as some number of these ticks.
 pub const SYS_FREQUENCY: u32 = crate::kconfig::CONFIG_SYS_CLOCK_TICKS_PER_SEC as u32;
 
-/// Zephyr can be configured for either 64-bit or 32-bit time values.  Use the appropriate type
-/// internally to match.  This should end up the same size as `k_ticks_t`, but unsigned instead of
-/// signed.
+// Zephyr can be configured for either 64-bit or 32-bit time values.  Use the appropriate type
+// internally to match.  This should end up the same size as `k_ticks_t`, but unsigned instead of
+// signed.
+
+/// Represnts a count of time ticks.  Matches Zephyr's `crate::raw::k_ticks_t`, but as an unsigned
+/// value, to match Fugit's time requirements.
 #[cfg(CONFIG_TIMEOUT_64BIT)]
 pub type Tick = u64;
+
+/// Represnts a count of time ticks.  Matches Zephyr's `crate::raw::k_ticks_t`, but as an unsigned
+/// value, to match Fugit's time requirements.
 #[cfg(not(CONFIG_TIMEOUT_64BIT))]
 pub type Tick = u32;
 
@@ -66,7 +73,11 @@ pub type Instant = fugit::Instant<Tick, 1, SYS_FREQUENCY>;
 // The absolute time offset is only implemented when time is a 64-bit value.  This also means that
 // "Instant" isn't available when time is defined as a 32-bit value.
 
-// Wrapper around the timeout type, so we can implement From/Info.
+/// Wrapper around the timeout type, so we can implement From/Info.
+///
+/// This wrapper allows us to implement `From` and `Info` from the Fugit types into the Zephyr
+/// types.  This allows various methods to accept either value, as well as the `Forever` and
+/// `NoWait` values defined here.
 pub struct Timeout(pub k_timeout_t);
 
 // `From` allows methods to take a time of various types and convert it into a Zephyr timeout.
@@ -89,8 +100,9 @@ impl From<Instant> for Timeout {
     }
 }
 
-/// A sleep that waits forever.  This is its own type, that is `Into<Timeout>` and can be used
-/// anywhere a timeout is needed.
+/// A timeout that waits forever.
+///
+/// This is its own type, that is `Into<Timeout>` and can be used anywhere a timeout is needed.
 pub struct Forever;
 
 impl From<Forever> for Timeout {
@@ -99,8 +111,9 @@ impl From<Forever> for Timeout {
     }
 }
 
-/// A sleep that doesn't ever wait.  This is its own type, that is `Info<Timeout>` and can be used
-/// anywhere a timeout is needed.
+/// A timeout that doesn't ever wait.
+///
+/// This is its own type, that is `Info<Timeout>` and can be used anywhere a timeout is needed.
 pub struct NoWait;
 
 impl From<NoWait> for Timeout {
@@ -109,8 +122,10 @@ impl From<NoWait> for Timeout {
     }
 }
 
-/// Put the current thread to sleep, for the given duration.  Uses `k_sleep` for the actual sleep.
-/// Returns a duration roughly representing the remaining amount of time if the sleep was woken.
+/// Put the current thread to sleep, for the given duration.
+///
+/// Uses `k_sleep` for the actual sleep.  Returns a duration roughly representing the remaining
+/// amount of time if the sleep was woken.
 pub fn sleep<T>(timeout: T) -> Duration
     where T: Into<Timeout>,
 {
