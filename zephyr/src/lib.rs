@@ -9,6 +9,7 @@
 #![no_std]
 #![allow(unexpected_cfgs)]
 
+pub mod sync;
 pub mod sys;
 pub mod time;
 
