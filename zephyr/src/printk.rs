@@ -19,6 +19,15 @@ macro_rules! printk {
     }};
 }
 
+/// Print to Zephyr's console, with a newline.
+///
+/// This macro uses the same syntax as std's
+/// [`format!`](https://doc.rust-lang.org/std/macro.format.html), but writes to the Zephyr console
+/// instead. See `std::fmt` for more information.
+///
+/// If `CONFIG_PRINTK_SYNC` is enabled, this locks during printing.  However, to avoid allocation,
+/// and due to private accessors in the Zephyr printk implementation, the lock is only over groups
+/// of a small buffer size.  This buffer must be kept fairly small, as it resides on the stack.
 #[macro_export]
 macro_rules! printkln {
     ($($arg:tt)*) => {{
@@ -93,6 +102,8 @@ impl Write for Context {
     }
 }
 
+/// Implementation of printk, invoked by the printk macro.
+#[doc(hidden)]
 pub fn printk(args: Arguments<'_>) {
     let mut context = Context {
         count: 0,
@@ -102,6 +113,8 @@ pub fn printk(args: Arguments<'_>) {
     context.flush();
 }
 
+/// Implementation of printkln, invoked by the printkln macro.
+#[doc(hidden)]
 pub fn printkln(args: Arguments<'_>) {
     let mut context = Context {
         count: 0,
