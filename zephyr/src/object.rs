@@ -179,6 +179,46 @@ macro_rules! _kobj_rule {
             // [$crate::sys::sync::StaticMutex::new(); $size];
             unsafe { ::core::mem::zeroed() };
     };
+
+    ($v:vis, $name:ident, StaticThread) => {
+        // Since the static object has an atomic that we assume is initialized, let the compiler put
+        // this in the data section it finds appropriate (probably .bss if it is initialized to zero).
+        // This only matters when the objects are being checked.
+        // TODO: This doesn't seem to work with the config.
+        // #[cfg_attr(not(CONFIG_RUST_CHECK_KOBJ_INIT),
+        //            link_section = concat!(".noinit.", stringify!($name), ".", file!(), line!()))]
+        $v static $name: $crate::sys::thread::StaticThread =
+            $crate::sys::thread::StaticThread::new();
+    };
+
+    ($v:vis , $name:ident, [StaticThread; $size:expr]) => {
+        $v static $name: [$crate::sys::thread::StaticThread; $size] =
+            // See above for the zereod reason.
+            unsafe { ::core::mem::zeroed() };
+    };
+
+    // Stack expressions have the same syntax ambiguities that they do. We allow an identifier
+    // (const), a numeric literal, or an expression in braces.
+    ($v:vis, $name:ident, ThreadStack<$size:literal>) => {
+        $crate::_kobj_stack!($v, $name, $size);
+    };
+    ($v:vis, $name:ident, ThreadStack<$size:ident>) => {
+        $crate::_kobj_stack!($v, $name, $size);
+    };
+    ($v:vis, $name:ident, ThreadStack<{$size:expr}>) => {
+        $crate::_kobj_stack!($v, $name, $size);
+    };
+
+    // Array of stack object versions.
+    ($v:vis, $name:ident, [ThreadStack<$size:literal>; $asize:expr]) => {
+        $crate::_kobj_stack!($v, $name, $size, $asize);
+    };
+    ($v:vis, $name:ident, [ThreadStack<$size:ident>; $asize:expr]) => {
+        $crate::_kobj_stack!($v, $name, $size, $asize);
+    };
+    ($v:vis, $name:ident, [ThreadStack<{$size:expr}>; $asize:expr]) => {
+        $crate::_kobj_stack!($v, $name, $size, $asize);
+    };
 }
 
 #[doc(hidden)]
