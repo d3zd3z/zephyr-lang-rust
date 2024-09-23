@@ -7,12 +7,13 @@ extern crate alloc;
 
 use alloc::boxed::Box;
 use alloc::vec::Vec;
+use zephyr::object::KobjInit;
 use zephyr::time::{Duration, sleep, Tick};
 use zephyr::{
     printkln,
     kobj_define,
     sys::uptime_get,
-    sync::Arc,
+    sync::{Arc, Mutex},
 };
 
 use crate::sysmutex::SysMutexSync;
@@ -51,6 +52,9 @@ extern "C" fn rust_main() {
               zephyr::kconfig::CONFIG_BOARD);
     printkln!("Time tick: {}", zephyr::time::SYS_FREQUENCY);
 
+    STAT_MUTEX.init();
+    let stats = Arc::new(Mutex::new_from(Stats::default(), STAT_MUTEX.get()));
+
     let syncers = get_syncer();
 
     printkln!("Pre fork");
@@ -65,9 +69,9 @@ extern "C" fn rust_main() {
         let child_syncer = ChannelSync::new(cq_send.clone(), reply_queues[i].clone());
         let child_syncer = Arc::new(child_syncer);
         */
-        // let child_stat = stats.clone();
+        let child_stat = stats.clone();
         let thread = PHIL_THREAD[i].spawn(PHIL_STACK[i].token(), move || {
-            phil_thread(i, syncer /*, child_stat*/);
+            phil_thread(i, syncer, child_stat);
         });
         thread.start();
     }
@@ -76,7 +80,7 @@ extern "C" fn rust_main() {
     loop {
         // Periodically, printout the stats.
         zephyr::time::sleep(delay);
-        // stats.lock().unwrap().show();
+        stats.lock().unwrap().show();
     }
 }
 
@@ -92,7 +96,7 @@ fn get_syncer() -> Vec<Arc<dyn ForkSync>> {
     result
 }
 
-fn phil_thread(n: usize, syncer: Arc<dyn ForkSync> /*, stats: Arc<Mutex<Stats>>*/) {
+fn phil_thread(n: usize, syncer: Arc<dyn ForkSync>, stats: Arc<Mutex<Stats>>) {
     printkln!("Child {} started: {:?}", n, syncer);
 
     // Determine our two forks.
@@ -112,9 +116,9 @@ fn phil_thread(n: usize, syncer: Arc<dyn ForkSync> /*, stats: Arc<Mutex<Stats>>*
             syncer.take(forks.1);
 
             let delay = get_random_delay(n, 25);
-            printkln!("Child {} eating ({} ms)", n, delay);
+            // printkln!("Child {} eating ({} ms)", n, delay);
             sleep(delay);
-            // stats.lock().unwrap().record_eat(n, delay);
+            stats.lock().unwrap().record_eat(n, delay);
 
             // Release the forks.
             // printkln!("Child {} giving up forks", n);
@@ -122,10 +126,48 @@ fn phil_thread(n: usize, syncer: Arc<dyn ForkSync> /*, stats: Arc<Mutex<Stats>>*
             syncer.release(forks.0);
 
             let delay = get_random_delay(n, 25);
-            printkln!("Child {} thinking ({} ms)", n, delay);
+            // printkln!("Child {} thinking ({} ms)", n, delay);
             sleep(delay);
-            // stats.lock().unwrap().record_think(n, delay);
+            stats.lock().unwrap().record_think(n, delay);
         }
+    }
+}
+
+/// Instead of just printing out so much information that the data just scrolls by, gather statistics.
+#[derive(Default)]
+struct Stats {
+    /// How many times each philospher has gone through the loop.
+    count: [u64; NUM_PHIL],
+    /// How much time each philosopher has spent eating.
+    eating: [u64; NUM_PHIL],
+    /// How much time each pilosopher has spent thinking.
+    thinking: [u64; NUM_PHIL],
+}
+
+impl Stats {
+    fn record_eat(&mut self, index: usize, time: Duration) {
+        self.eating[index] += time.to_millis();
+    }
+
+    fn record_think(&mut self, index: usize, time: Duration) {
+        self.thinking[index] += time.to_millis();
+        self.count[index] += 1;
+    }
+
+    fn show(&self) {
+        printkln!("{:?}, e:{:?}, t:{:?}", self.count, self.eating, self.thinking);
+
+        /*
+        // Invoke the thread analyzer report.
+        {
+            extern "C" {
+                fn thread_analyzer_print(cpu: usize);
+            }
+            unsafe {
+                thread_analyzer_print(0);
+            }
+        }
+        */
     }
 }
 
@@ -141,4 +183,7 @@ fn get_random_delay(id: usize, period: usize) -> Duration {
 kobj_define! {
     static PHIL_THREAD: [StaticThread; NUM_PHIL];
     static PHIL_STACK: [ThreadStack<PHIL_STACK_SIZE>; NUM_PHIL];
+
+    // A mutex to hold statistics data.
+    static STAT_MUTEX: StaticMutex;
 }
