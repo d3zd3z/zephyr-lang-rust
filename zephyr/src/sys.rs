@@ -9,6 +9,8 @@
 //! This module `zephyr::sys` contains thin wrappers to these C bindings, that can be used without
 //! unsafe, but as unchanged as possible.
 
+pub mod sync;
+
 use zephyr_sys::k_timeout_t;
 
 // These two constants are not able to be captured by bindgen.  It is unlikely that these values
