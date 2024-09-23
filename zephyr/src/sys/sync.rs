@@ -32,6 +32,7 @@
 
 use core::fmt;
 
+use crate::error::{Result, to_result_void};
 use crate::raw::{
     k_mutex,
     k_mutex_init,
@@ -67,16 +68,15 @@ impl KobjInit<k_mutex, Mutex> for StaticKernelObject<k_mutex> {
 }
 
 impl Mutex {
-    pub fn lock<T>(&self, timeout: T)
+    pub fn lock<T>(&self, timeout: T) -> Result<()>
         where T: Into<Timeout>,
     {
         let timeout: Timeout = timeout.into();
-        // TODO: Erro
-        unsafe { k_mutex_lock(self.item, timeout.0); }
+        to_result_void(unsafe { k_mutex_lock(self.item, timeout.0) })
     }
 
-    pub fn unlock(&self) {
-        unsafe { k_mutex_unlock(self.item); }
+    pub fn unlock(&self) -> Result<()> {
+        to_result_void(unsafe { k_mutex_unlock(self.item) })
     }
 }
 
@@ -116,6 +116,7 @@ impl StaticMutex {
     pub fn init(&self) {
         self.init_help(|raw| {
             unsafe {
+                // Init is defined to always return zero, no error possible.
                 k_mutex_init(raw);
             }
         })
