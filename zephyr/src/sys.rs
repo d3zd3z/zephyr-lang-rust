@@ -10,6 +10,7 @@
 //! unsafe, but as unchanged as possible.
 
 pub mod sync;
+pub mod thread;
 
 use zephyr_sys::k_timeout_t;
 
