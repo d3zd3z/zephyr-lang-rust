@@ -10,10 +10,13 @@
 #![allow(unexpected_cfgs)]
 
 pub mod align;
+pub mod error;
 pub mod object;
 pub mod sync;
 pub mod sys;
 pub mod time;
+
+pub use error::{Error, Result};
 
 // Bring in the generated kconfig module
 include!(concat!(env!("OUT_DIR"), "/kconfig.rs"));
