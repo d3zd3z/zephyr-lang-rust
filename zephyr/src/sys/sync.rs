@@ -34,6 +34,11 @@ use core::fmt;
 
 use crate::error::{Result, to_result_void};
 use crate::raw::{
+    k_condvar,
+    k_condvar_init,
+    k_condvar_broadcast,
+    k_condvar_signal,
+    k_condvar_wait,
     k_mutex,
     k_mutex_init,
     k_mutex_lock,
@@ -46,6 +51,7 @@ use crate::object::{
 use crate::time::{
     Timeout,
 };
+use super::K_FOREVER;
 
 /// A Zephyr `k_mutux` usable from safe Rust code.
 ///
@@ -120,5 +126,61 @@ impl StaticMutex {
                 k_mutex_init(raw);
             }
         })
+    }
+}
+
+/// A Condition Variable
+///
+/// Lightweight wrappers for Zephyr's `k_condvar`.
+#[derive(Clone)]
+pub struct Condvar {
+    pub item: *mut k_condvar,
+}
+
+unsafe impl Sync for StaticKernelObject<k_condvar> { }
+
+unsafe impl Sync for Condvar {}
+unsafe impl Send for Condvar {}
+
+impl KobjInit<k_condvar, Condvar> for StaticKernelObject<k_condvar> {
+    fn wrap(ptr: *mut k_condvar) -> Condvar {
+        Condvar { item: ptr }
+    }
+}
+
+pub type StaticCondvar = StaticKernelObject<k_condvar>;
+
+impl StaticCondvar {
+    pub fn init(&self) {
+        self.init_help(|raw| {
+            unsafe {
+                k_condvar_init(raw);
+            }
+        })
+    }
+}
+
+impl Condvar {
+    /// Wait for someone else using this mutex/condvar pair to notify.  Note that this requires the
+    /// lock to be held by use, but as this is a low-level binding to Zephyr's interfaces, this is
+    /// not enforced.  See [`sync::Condvar`] for a safer and easier to use interface.
+    pub fn wait(&self, lock: &Mutex) {
+        unsafe { k_condvar_wait(self.item, lock.item, K_FOREVER); }
+    }
+
+    // TODO: timeout.
+
+    pub fn notify_one(&self) {
+        unsafe { k_condvar_signal(self.item); }
+    }
+
+    pub fn notify_all(&self) {
+        unsafe { k_condvar_broadcast(self.item); }
+    }
+}
+
+impl fmt::Debug for Condvar {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "sys::Condvar {:?}", self.item)
     }
 }
