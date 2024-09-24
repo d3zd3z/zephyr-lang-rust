@@ -16,8 +16,10 @@ use zephyr::{
     sync::{Arc, Mutex},
 };
 
+use crate::condsync::CondSync;
 use crate::sysmutex::SysMutexSync;
 
+mod condsync;
 mod sysmutex;
 
 /// How many philosophers.  There will be the same number of forks.
@@ -84,9 +86,22 @@ extern "C" fn rust_main() {
     }
 }
 
-fn get_syncer() -> Vec<Arc<dyn ForkSync>> {
+#[allow(dead_code)]
+fn get_syncerb() -> Vec<Arc<dyn ForkSync>> {
     // Simple mutex version.
     let syncer = Box::new(SysMutexSync::new())
+        as Box<dyn ForkSync>;
+    let syncer: Arc<dyn ForkSync> = Arc::from(syncer);
+    let mut result = Vec::new();
+    for _ in 0..NUM_PHIL {
+        result.push(syncer.clone());
+    }
+    result
+}
+
+fn get_syncer() -> Vec<Arc<dyn ForkSync>> {
+    // Condvar version
+    let syncer = Box::new(CondSync::new())
         as Box<dyn ForkSync>;
     let syncer: Arc<dyn ForkSync> = Arc::from(syncer);
     let mut result = Vec::new();
