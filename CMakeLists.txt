@@ -122,6 +122,8 @@ ${module}.path = \"$CACHE{RUST_MODULE_DIR}/${module}\"
   # symlink) in the source directory to allow various IDE tools and such to work.  The build we
   # invoke will override these settings, in case they are out of date.  Everything set here
   # should match the arguments given to the cargo build command below.
+  # To allow this to be run outside of the tree, this also includes some things set in the
+  # environment by the normal build process.
   file(WRITE ${SAMPLE_CARGO_CONFIG} "
 # This is a generated sample .cargo/config.toml file from the Zephyr build.
 # At the time of generation, this represented the settings needed to allow
@@ -138,6 +140,7 @@ ZEPHYR_DTS = \"${ZEPHYR_DTS}\"
 INCLUDE_DIRS = \"${include_dirs}\"
 INCLUDE_DEFINES = \"${include_defines}\"
 WRAPPER_FILE = \"${WRAPPER_FILE}\"
+ZEPHYR_BASE = \"${ZEPHYR_BASE}\"
 
 [patch.crates-io]
 ${config_paths}
