@@ -10,6 +10,7 @@
 
 extern crate alloc;
 
+#[allow(unused_imports)]
 use alloc::boxed::Box;
 use alloc::vec::Vec;
 use zephyr::object::KobjInit;
@@ -26,9 +27,12 @@ use zephyr::{
 use crate::condsync::CondSync;
 #[allow(unused_imports)]
 use crate::sysmutex::SysMutexSync;
+#[allow(unused_imports)]
+use crate::channel::get_channel_syncer;
 
 mod condsync;
 mod sysmutex;
+mod channel;
 
 /// How many philosophers.  There will be the same number of forks.
 const NUM_PHIL: usize = 6;
@@ -118,6 +122,11 @@ fn get_syncer() -> Vec<Arc<dyn ForkSync>> {
         result.push(syncer.clone());
     }
     result
+}
+
+#[cfg(CONFIG_SYNC_CHANNEL)]
+fn get_syncer() -> Vec<Arc<dyn ForkSync>> {
+    get_channel_syncer()
 }
 
 fn phil_thread(n: usize, syncer: Arc<dyn ForkSync>, stats: Arc<Mutex<Stats>>) {
