@@ -14,3 +14,8 @@ crate-type = ["staticlib"]
 
 [dependencies]
 zephyr = "3.7.0"
+
+[profile.release]
+debug-assertions = true
+overflow-checks = true
+debug = true
