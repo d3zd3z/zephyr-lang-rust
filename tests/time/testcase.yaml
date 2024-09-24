@@ -1,5 +1,6 @@
 common:
   filter: CONFIG_RUST_SUPPORTED
+  tags: rust
 tests:
   test.rust.time:
     harness: console
