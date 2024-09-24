@@ -15,6 +15,8 @@ use core::{
 use crate::time::Forever;
 use crate::sys::sync as sys;
 
+pub mod channel;
+
 pub mod atomic {
     //! Re-export portable atomic.
     //!
