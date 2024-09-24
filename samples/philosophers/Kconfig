@@ -1,0 +1,23 @@
+# Copyright (c) 2024 Linaro LTD
+# SPDX-License-Identifier: Apache-2.0
+
+mainmenu "Rust Dining Philosphers"
+
+source "Kconfig.zephyr"
+
+choice
+	prompt "Select Synchronization implementation"
+	default SYNC_CONDVAR
+
+	config SYNC_SYS_MUTEX
+		bool "Use sys::Mutex to synchronize forks"
+		help
+		  Use to have the dining philosophers sample use sys::Mutex, with one per fork, to
+		  synchronize.
+
+	config SYNC_CONDVAR
+		bool "Use sync::Condvar and sync::Mutex to synchronize forks"
+		help
+		  Use to have the dining philosophers sample use a single data structure, protected
+		  by a sync::Mutex and coordinated with a sync::Condvar, to synchronize.
+endchoice

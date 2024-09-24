@@ -28,6 +28,7 @@ pub struct SysMutexSync {
 }
 
 impl SysMutexSync {
+    #[allow(dead_code)]
     pub fn new() -> SysMutexSync  {
         let locks = MUTEXES.each_ref().map(|m| {
             m.init();

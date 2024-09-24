@@ -3,6 +3,11 @@
 
 #![no_std]
 
+// Cargo tries to detect configs that have typos in them.  Unfortunately, the Zephyr Kconfig system
+// uses a large number of Kconfigs and there is no easy way to know which ones might conceivably be
+// valid.  This prevents a warning about each cfg that is used.
+#![allow(unexpected_cfgs)]
+
 extern crate alloc;
 
 use alloc::boxed::Box;
@@ -16,7 +21,10 @@ use zephyr::{
     sync::{Arc, Mutex},
 };
 
+// These are optional, based on Kconfig, so allow them to be unused.
+#[allow(unused_imports)]
 use crate::condsync::CondSync;
+#[allow(unused_imports)]
 use crate::sysmutex::SysMutexSync;
 
 mod condsync;
@@ -86,8 +94,8 @@ extern "C" fn rust_main() {
     }
 }
 
-#[allow(dead_code)]
-fn get_syncerb() -> Vec<Arc<dyn ForkSync>> {
+#[cfg(CONFIG_SYNC_SYS_MUTEX)]
+fn get_syncer() -> Vec<Arc<dyn ForkSync>> {
     // Simple mutex version.
     let syncer = Box::new(SysMutexSync::new())
         as Box<dyn ForkSync>;
@@ -99,6 +107,7 @@ fn get_syncerb() -> Vec<Arc<dyn ForkSync>> {
     result
 }
 
+#[cfg(CONFIG_SYNC_CONDVAR)]
 fn get_syncer() -> Vec<Arc<dyn ForkSync>> {
     // Condvar version
     let syncer = Box::new(CondSync::new())

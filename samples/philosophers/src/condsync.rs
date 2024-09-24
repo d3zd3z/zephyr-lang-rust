@@ -27,6 +27,7 @@ pub struct CondSync {
 }
 
 impl CondSync {
+    #[allow(dead_code)]
     pub fn new() -> CondSync  {
         MUTEX.init();
         CONDVAR.init();
