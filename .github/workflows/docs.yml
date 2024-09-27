@@ -74,6 +74,9 @@ jobs:
 
   deploy:
     needs: generate-docs
+    permissions:
+      pages: write
+      id-token: write
 
     environment:
       name: github-pages
@@ -82,7 +85,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Some deploy debugging
-        run: |
-          echo "This shows deployment"
-          echo "Key: ${AWS_BUILDS_ZEPHYR_PR_ACCESS_KEY_ID}"
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
