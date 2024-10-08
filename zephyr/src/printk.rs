@@ -3,6 +3,14 @@
 
 //! Printk implementation for Rust.
 //!
+//! The Zephyr configuration `CONFIG_PRINTK` must be enabled for this functionality to be present.
+//!
+//! This module provides two macros: [`crate::printk!`] and [`crate::printkln!`]. These are analagous to
+//! [`std::print`](https://doc.rust-lang.org/std/macro.print.html) and
+//! [`std::println`](https://doc.rust-lang.org/std/macro.println.html) macros.
+//!
+//! These will print messages through Zephyr's `printk` functionality.
+//!
 //! This uses the `k_str_out` syscall, which is part of printk to output to the console.
 
 use core::fmt::{
@@ -12,6 +20,14 @@ use core::fmt::{
     write,
 };
 
+/// Print to Zephyr's console.
+///
+/// Equivalent to the [`crate::printkln!`] macro except that a newline is not printed at the end of the
+/// message.
+///
+/// Note that printk access in Zephyr are uncoordinated unless `CONFIG_PRINTK_SYNC` is enabled.
+/// Even in this case, because of mismatches between Rust and C's message formatting, messages from
+/// Rust may not be as well synchronized, even when this is defined.
 #[macro_export]
 macro_rules! printk {
     ($($arg:tt)*) => {{
@@ -19,6 +35,17 @@ macro_rules! printk {
     }};
 }
 
+/// Print to Zephyr's console, with a newline.
+///
+/// This macro uses the same syntax as std's
+/// [`format!`](https://doc.rust-lang.org/std/macro.format.html), but writes to the Zephyr console
+/// instead. See `std::fmt` for more information.
+///
+/// If `CONFIG_PRINTK_SYNC` is enabled, this locks during printing.  However, to avoid allocation,
+/// and due to private accessors in the Zephyr printk implementation, the lock is only over groups
+/// of a small buffer size.  This buffer must be kept fairly small, as it resides on the stack.
+///
+/// TODO
 #[macro_export]
 macro_rules! printkln {
     ($($arg:tt)*) => {{
@@ -93,6 +120,8 @@ impl Write for Context {
     }
 }
 
+/// Implementation of printk, invoked by the printk macro.
+#[doc(hidden)]
 pub fn printk(args: Arguments<'_>) {
     let mut context = Context {
         count: 0,
@@ -102,6 +131,8 @@ pub fn printk(args: Arguments<'_>) {
     context.flush();
 }
 
+/// Implementation of printkln, invoked by the printkln macro.
+#[doc(hidden)]
 pub fn printkln(args: Arguments<'_>) {
     let mut context = Context {
         count: 0,
