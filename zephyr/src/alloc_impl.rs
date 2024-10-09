@@ -1,7 +1,7 @@
 //! A Rust global allocator that uses the stdlib allocator in Zephyr
 //!
 //! The zephyr runtime is divided into three crates:
-//! - [core](https://doc.rust-lang.org/stable/core/) is the the "dependency-free" foundation of the
+//! - [core](https://doc.rust-lang.org/stable/core/) is the "dependency-free" foundation of the
 //!   standard library.  It is all of the parts of the standard library that have no dependencies
 //!   outside of the language and the architecture itself.
 //! - [alloc](https://doc.rust-lang.org/stable/alloc/) provides the parts of the standard library

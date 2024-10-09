@@ -26,7 +26,7 @@ config RUST_ALLOC
 	help
 	  If enabled, the Rust zephyr support library will include support for
 	  an allocator.  This allocator will use the currently configured
-	  Zephyr allocator (malloc/free).  This this enabled, Rust
+	  Zephyr allocator (malloc/free).  With this enabled, Rust
 	  applications can use the `alloc` crate.
 
 config RUST_CHECK_KOBJ_INIT
