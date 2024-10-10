@@ -8,6 +8,7 @@
 
 #![no_std]
 #![allow(unexpected_cfgs)]
+#![deny(missing_docs)]
 
 pub mod align;
 pub mod error;
