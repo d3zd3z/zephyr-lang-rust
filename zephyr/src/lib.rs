@@ -19,7 +19,18 @@ pub mod time;
 pub use error::{Error, Result};
 
 // Bring in the generated kconfig module
-include!(concat!(env!("OUT_DIR"), "/kconfig.rs"));
+pub mod kconfig {
+    //! Zephyr Kconfig values.
+    //!
+    //! This module contains an auto-generated set of constants corresponding to the values of
+    //! various Kconfig values during the build.
+    //! 
+    //! **Note**: Unless you are viewing docs generated for a specific build, the values below are
+    //! unlikely to directly correspond to those in a given build.
+
+    #![allow(missing_docs)]
+    include!(concat!(env!("OUT_DIR"), "/kconfig.rs"));
+}
 
 // Ensure that Rust is enabled.
 #[cfg(not(CONFIG_RUST))]
