@@ -87,6 +87,9 @@ impl<T> fmt::Debug for Mutex<T> {
 ///
 /// This structure is created by the [`lock`] and [`try_lock`] methods on [`Mutex`].
 ///
+/// [`lock`]: Mutex::lock
+/// [`try_lock`]: Mutex::try_lock
+///
 /// Taken directly from
 /// [`std::sync::MutexGuard`](https://doc.rust-lang.org/stable/std/sync/struct.MutexGuard.html).
 pub struct MutexGuard<'a, T: ?Sized + 'a> {

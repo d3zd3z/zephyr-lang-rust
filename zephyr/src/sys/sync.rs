@@ -164,6 +164,8 @@ impl Condvar {
     /// Wait for someone else using this mutex/condvar pair to notify.  Note that this requires the
     /// lock to be held by use, but as this is a low-level binding to Zephyr's interfaces, this is
     /// not enforced.  See [`sync::Condvar`] for a safer and easier to use interface.
+    ///
+    /// [`sync::Condvar`]: crate::sync::Condvar
     pub fn wait(&self, lock: &Mutex) {
         unsafe { k_condvar_wait(self.item, lock.item, K_FOREVER); }
     }
