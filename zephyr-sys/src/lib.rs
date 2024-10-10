@@ -17,4 +17,8 @@
 // Note, however, that this suppresses any warnings in the bindings about improper C types.
 #![allow(improper_ctypes)]
 
+// The Zephyr doc comments are doxygen, not rust docs.  Until these are
+// better translated, ignore the various warnings.
+#![allow(rustdoc::broken_intra_doc_links)]
+
 include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
