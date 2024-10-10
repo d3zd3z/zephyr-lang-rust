@@ -12,7 +12,7 @@ use core::{
     ops::{Deref, DerefMut},
 };
 
-use crate::time::Forever;
+use crate::time::{Forever, NoWait};
 use crate::sys::sync as sys;
 
 // Channels are currently only available with allocation.  Bounded channels later might be
@@ -40,6 +40,16 @@ pub use portable_atomic_util::Arc;
 
 /// Until poisoning is implemented, mutexes never return an error, and we just get back the guard.
 pub type LockResult<Guard> = Result<Guard, ()>;
+
+pub type TryLockResult<Guard> = Result<Guard, TryLockError>;
+
+/// An enumeration of possible errors associated with a [`TryLockResult`].
+///
+/// Note that until Poisoning is implemented, there is only one value of this.
+pub enum TryLockError {
+    /// The lock could not be acquired at this time because the operation would otherwise block.
+    WouldBlock,
+}
 
 /// A mutual exclusion primitive useful for protecting shared data.
 ///
@@ -116,15 +126,36 @@ impl<T: ?Sized> Mutex<T> {
         // With `Forever`, should never return an error.
         self.inner.lock(Forever).unwrap();
         unsafe {
-            MutexGuard::new(self)
+            Ok(MutexGuard::new(self))
+        }
+    }
+
+    /// Attempts to acquire this lock.
+    ///
+    /// If the lock could not be acquired at this time, then [`Err`] is returned. Otherwise, an RAII
+    /// guard is returned. The lock will be unlocked when the guard is dropped.
+    ///
+    /// This function does not block.
+    pub fn try_lock(&self) -> TryLockResult<MutexGuard<'_, T>> {
+        match self.inner.lock(NoWait) {
+            Ok(()) => {
+                unsafe {
+                    Ok(MutexGuard::new(self))
+                }
+            }
+            // TODO: It might be better to distinguish these errors, and only return the WouldBlock
+            // if that is the corresponding error. But, the lock shouldn't fail in Zephyr.
+            Err(_) => {
+                Err(TryLockError::WouldBlock)
+            }
         }
     }
 }
 
 impl<'mutex, T: ?Sized> MutexGuard<'mutex, T> {
-    unsafe fn new(lock: &'mutex Mutex<T>) -> LockResult<MutexGuard<'mutex, T>> {
+    unsafe fn new(lock: &'mutex Mutex<T>) -> MutexGuard<'mutex, T> {
         // poison todo
-        Ok(MutexGuard { lock, _nosend: PhantomData })
+        MutexGuard { lock, _nosend: PhantomData }
     }
 }
 
