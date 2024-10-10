@@ -41,6 +41,10 @@ pub use portable_atomic_util::Arc;
 /// Until poisoning is implemented, mutexes never return an error, and we just get back the guard.
 pub type LockResult<Guard> = Result<Guard, ()>;
 
+/// The return type from [`Mutex::try_lock`].
+///
+/// The error indicates the reason for the failure.  Until poisoning is
+/// implemented, there is only a single type of failure.
 pub type TryLockResult<Guard> = Result<Guard, TryLockError>;
 
 /// An enumeration of possible errors associated with a [`TryLockResult`].

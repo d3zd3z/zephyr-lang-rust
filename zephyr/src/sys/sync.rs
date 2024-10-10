@@ -62,7 +62,8 @@ use super::K_FOREVER;
 /// recursively lock, or incorrect nesting can easily result in deadlock.
 #[derive(Clone)]
 pub struct Mutex {
-    pub item: *mut k_mutex,
+    /// The raw Zephyr mutex.
+    item: *mut k_mutex,
 }
 
 unsafe impl Sync for StaticKernelObject<k_mutex> {}
@@ -74,6 +75,11 @@ impl KobjInit<k_mutex, Mutex> for StaticKernelObject<k_mutex> {
 }
 
 impl Mutex {
+    /// Lock a Zephyr Mutex.
+    ///
+    /// Will wait for the lock, returning status, with `Ok(())` indicating the lock has been
+    /// acquired, and an error indicating a timeout (Zephyr returns different errors depending on
+    /// the reason).
     pub fn lock<T>(&self, timeout: T) -> Result<()>
         where T: Into<Timeout>,
     {
@@ -81,6 +87,10 @@ impl Mutex {
         to_result_void(unsafe { k_mutex_lock(self.item, timeout.0) })
     }
 
+    /// Unlock a Zephyr Mutex.
+    ///
+    /// The mutex must already be locked by the calling thread.  Mutexes may not be unlocked in
+    /// ISRs.
     pub fn unlock(&self) -> Result<()> {
         to_result_void(unsafe { k_mutex_unlock(self.item) })
     }
@@ -119,6 +129,11 @@ impl fmt::Debug for Mutex {
 pub type StaticMutex = StaticKernelObject<k_mutex>;
 
 impl StaticMutex {
+    /// Initialize the Zephyr mutex.
+    ///
+    /// Must be called before calling [`get`].
+    ///
+    /// [`get`]: KobjInit::get
     pub fn init(&self) {
         self.init_help(|raw| {
             unsafe {
@@ -134,7 +149,8 @@ impl StaticMutex {
 /// Lightweight wrappers for Zephyr's `k_condvar`.
 #[derive(Clone)]
 pub struct Condvar {
-    pub item: *mut k_condvar,
+    /// The underlying `k_condvar`.
+    item: *mut k_condvar,
 }
 
 unsafe impl Sync for StaticKernelObject<k_condvar> { }
@@ -148,9 +164,17 @@ impl KobjInit<k_condvar, Condvar> for StaticKernelObject<k_condvar> {
     }
 }
 
+/// A static Zephyr `k_condvar` wrapped with a Rust kernel object manager.
+///
+/// This should only be declared inside of the `kobj_define!` macro.
 pub type StaticCondvar = StaticKernelObject<k_condvar>;
 
 impl StaticCondvar {
+    /// Initialize the underlying Zephyr condvar.
+    ///
+    /// Must be called before calling [`get`].
+    ///
+    /// [`get`]: KobjInit::get
     pub fn init(&self) {
         self.init_help(|raw| {
             unsafe {
@@ -161,9 +185,11 @@ impl StaticCondvar {
 }
 
 impl Condvar {
-    /// Wait for someone else using this mutex/condvar pair to notify.  Note that this requires the
-    /// lock to be held by use, but as this is a low-level binding to Zephyr's interfaces, this is
-    /// not enforced.  See [`sync::Condvar`] for a safer and easier to use interface.
+    /// Wait for someone else using this mutex/condvar pair to notify.
+    ///
+    /// Note that this requires the lock to be held by use, but as this is a low-level binding to
+    /// Zephyr's interfaces, this is not enforced.  See [`sync::Condvar`] for a safer and easier to
+    /// use interface.
     ///
     /// [`sync::Condvar`]: crate::sync::Condvar
     pub fn wait(&self, lock: &Mutex) {
@@ -172,10 +198,12 @@ impl Condvar {
 
     // TODO: timeout.
 
+    /// Wake a single thread waiting on this condition variable.
     pub fn notify_one(&self) {
         unsafe { k_condvar_signal(self.item); }
     }
 
+    /// Wake all threads waiting on this condition variable.
     pub fn notify_all(&self) {
         unsafe { k_condvar_broadcast(self.item); }
     }

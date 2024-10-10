@@ -35,9 +35,11 @@ pub const fn stack_len(size: usize) -> usize {
 /// separate field.  As long as the SIZE is properly aligned, this should work without padding
 /// between the fields.
 pub struct ThreadStack<const SIZE: usize> {
-    pub align: AlignAs<ZR_STACK_ALIGN>,
-    pub data: UnsafeCell<[z_thread_stack_element; SIZE]>,
-    pub extra: [z_thread_stack_element; ZR_STACK_RESERVED],
+    #[allow(dead_code)]
+    align: AlignAs<ZR_STACK_ALIGN>,
+    data: UnsafeCell<[z_thread_stack_element; SIZE]>,
+    #[allow(dead_code)]
+    extra: [z_thread_stack_element; ZR_STACK_RESERVED],
 }
 
 unsafe impl<const SIZE: usize> Sync for ThreadStack<SIZE> {}
@@ -70,8 +72,16 @@ macro_rules! kernel_stack_define {
     };
 }
 
+/// A single Zephyr thread.
+///
+/// This wraps a `k_thread` type within Zephyr.  This value is returned
+/// from the `StaticThread::spawn` method, to allow control over the start
+/// of the thread.  The [`start`] method should be used to start the
+/// thread.
+///
+/// [`start`]: Thread::start
 pub struct Thread {
-    pub raw: *mut k_thread,
+    raw: *mut k_thread,
 }
 
 unsafe impl Sync for StaticKernelObject<k_thread> { }
@@ -116,6 +126,22 @@ pub struct StackToken {
 // This isn't really safe at all, as these can be initialized.  It is unclear how, if even if it is
 // possible to implement safe static threads and other data structures in Zephyr.
 
+/// A Statically defined Zephyr `k_thread` object to be used from Rust.
+/// 
+/// This should be used in a manner similar to:
+/// ```
+/// const MY_STACK_SIZE: usize = 4096;
+///
+/// kobj_define! {
+///     static MY_THREAD: StaticThread;
+///     static MY_STACK: ThreadStack<MY_STACK_SIZE>;
+/// }
+///
+/// let thread = MY_THREAD.spawn(MY_STACK.token(), move || {
+///     // Body of thread.
+/// });
+/// thread.start();
+/// ```
 pub type StaticThread = StaticKernelObject<k_thread>;
 
 // The thread itself assumes we've already initialized, so this method is on the wrapper.

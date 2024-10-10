@@ -60,6 +60,7 @@ pub struct StaticKernelObject<T> {
 /// Generally, kernel objects in Rust are just containers for raw pointers to an underlying kernel
 /// object.  When this is the case, this trait can be used to get the underlying pointer.
 pub trait KobjGet<T> {
+    /// Fetch the raw pointer from this object.
     fn get_ptr(&self) -> *mut T;
 }
 

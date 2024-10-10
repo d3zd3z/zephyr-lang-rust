@@ -43,8 +43,12 @@ pub fn unbounded_from<T>(queue: Queue) -> (Sender<T>, Receiver<T>) {
     (s, r)
 }
 
+/// The underlying type for Messages through Zephyr's [`Queue`].
+///
+/// This wrapper is used internally to wrap user messages through the queue.  It is not useful in
+/// safe code, but may be useful for implementing other types of message queues.
 #[repr(C)]
-struct Message<T> {
+pub struct Message<T> {
     /// The private data used by the kernel to enqueue messages and such.
     _private: usize,
     /// The actual data being transported.
@@ -167,6 +171,8 @@ impl<T> fmt::Debug for Receiver<T> {
 /// The message could not be sent because the channel is disconnected.
 ///
 /// The error contains the message so it can be recovered.
+///
+/// [`send`]: Sender::send
 #[derive(PartialEq, Eq, Clone, Copy)]
 pub struct SendError<T>(pub T);
 
@@ -179,5 +185,7 @@ impl<T> fmt::Debug for SendError<T> {
 /// An error returned from the [`recv`] method.
 ///
 /// A message could not be received because the channel is empty and disconnected.
+///
+/// [`recv`]: Receiver::recv
 #[derive(PartialEq, Eq, Clone, Copy, Debug)]
 pub struct RecvError;

@@ -6,8 +6,10 @@
 //!
 //! Thanks to Chayim Refael Friedman for help with this.
 
+#[doc(hidden)]
 pub struct AlignAsStruct;
 
+#[doc(hidden)]
 pub trait AlignAsTrait<const N: usize> {
     type Aligned;
 }
@@ -34,3 +36,14 @@ impl_alignas!(1, 2, 4, 8, 16, 32, 64, 128, 256);
 pub struct AlignAs<const N: usize>([<AlignAsStruct as AlignAsTrait<N>>::Aligned; 0])
     where
     AlignAsStruct: AlignAsTrait<N>;
+
+impl<const N: usize> AlignAs<N>
+    where AlignAsStruct: AlignAsTrait<N>
+{
+    /// Construct a new AlignAs.
+    ///
+    /// It is zero bytes, but needs a constructor as the field is private.
+    pub const fn new() -> AlignAs<N> {
+        AlignAs([])
+    }
+}
