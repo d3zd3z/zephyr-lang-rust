@@ -77,8 +77,13 @@ function(rust_cargo_application)
 
   # TODO: Make sure RUSTFLAGS is not set.
 
-  # TODO: Let this be configurable, or based on Kconfig debug?
-  set(RUST_BUILD_TYPE debug)
+  if(CONFIG_DEBUG)
+    set(RUST_BUILD_TYPE "debug")
+    set(rust_build_type_arg "")
+  else()
+    set(RUST_BUILD_TYPE "release")
+    set(rust_build_type_arg "--release")
+  endif()
   set(BUILD_LIB_DIR "${CMAKE_CURRENT_SOURCE_DIR}/${RUST_TARGET}/${RUST_BUILD_TYPE}")
 
   set(CARGO_TARGET_DIR "${CMAKE_CURRENT_BINARY_DIR}/rust/target")
@@ -117,6 +122,8 @@ ${module}.path = \"$CACHE{RUST_MODULE_DIR}/${module}\"
   # symlink) in the source directory to allow various IDE tools and such to work.  The build we
   # invoke will override these settings, in case they are out of date.  Everything set here
   # should match the arguments given to the cargo build command below.
+  # To allow this to be run outside of the tree, this also includes some things set in the
+  # environment by the normal build process.
   file(WRITE ${SAMPLE_CARGO_CONFIG} "
 # This is a generated sample .cargo/config.toml file from the Zephyr build.
 # At the time of generation, this represented the settings needed to allow
@@ -133,6 +140,7 @@ ZEPHYR_DTS = \"${ZEPHYR_DTS}\"
 INCLUDE_DIRS = \"${include_dirs}\"
 INCLUDE_DEFINES = \"${include_defines}\"
 WRAPPER_FILE = \"${WRAPPER_FILE}\"
+ZEPHYR_BASE = \"${ZEPHYR_BASE}\"
 
 [patch.crates-io]
 ${config_paths}
@@ -152,8 +160,7 @@ ${config_paths}
       INCLUDE_DEFINES="${include_defines}"
       WRAPPER_FILE="${WRAPPER_FILE}"
       cargo build
-      # TODO: release flag if release build
-      # --release
+      ${rust_build_type_arg}
 
       # Override the features according to the shield given. For a general case,
       # this will need to come from a variable or argument.

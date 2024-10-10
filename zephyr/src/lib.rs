@@ -8,12 +8,30 @@
 
 #![no_std]
 #![allow(unexpected_cfgs)]
+#![deny(missing_docs)]
 
+pub mod align;
+pub mod error;
+pub mod object;
+pub mod sync;
 pub mod sys;
 pub mod time;
 
+pub use error::{Error, Result};
+
 // Bring in the generated kconfig module
-include!(concat!(env!("OUT_DIR"), "/kconfig.rs"));
+pub mod kconfig {
+    //! Zephyr Kconfig values.
+    //!
+    //! This module contains an auto-generated set of constants corresponding to the values of
+    //! various Kconfig values during the build.
+    //! 
+    //! **Note**: Unless you are viewing docs generated for a specific build, the values below are
+    //! unlikely to directly correspond to those in a given build.
+
+    #![allow(missing_docs)]
+    include!(concat!(env!("OUT_DIR"), "/kconfig.rs"));
+}
 
 // Ensure that Rust is enabled.
 #[cfg(not(CONFIG_RUST))]
@@ -43,7 +61,8 @@ fn panic(info :&PanicInfo) -> ! {
     }
 }
 
-/// Re-export of zephyr-sys as `zephyr::raw`.
+/// Re-export of zephyr-sys as `zephyr::raw`.  Generally, most users of zephyr will use
+/// `zephyr::raw` instead of directly importing the zephyr-sys crate.
 pub mod raw {
     pub use zephyr_sys::*;
 }
@@ -53,3 +72,8 @@ pub mod raw {
 pub mod _export {
     pub use core::format_args;
 }
+
+// Mark this as `pub` so the docs can be read.
+// If allocation has been requested, provide the allocator.
+#[cfg(CONFIG_RUST_ALLOC)]
+pub mod alloc_impl;

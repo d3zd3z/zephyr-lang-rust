@@ -15,6 +15,10 @@ crate-type = ["staticlib"]
 [dependencies]
 zephyr = "3.7.0"
 
+# Dependencies that are used by build.rs.
+[build-dependencies]
+zephyr-build = "3.7.0"
+
 [profile.release]
 debug-assertions = true
 overflow-checks = true
