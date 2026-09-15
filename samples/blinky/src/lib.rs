@@ -10,6 +10,8 @@
 
 use log::warn;
 
+use zephyr_panic as _;
+
 #[no_mangle]
 extern "C" fn rust_main() {
     unsafe {

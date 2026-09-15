@@ -14,6 +14,7 @@ use zephyr::device::gpio::GpioPin;
 use zephyr::devicetree;
 use zephyr::embassy::Executor;
 use zephyr::raw::{ZR_GPIO_INPUT, ZR_GPIO_OUTPUT_ACTIVE};
+use zephyr_panic as _;
 
 use embassy_sync::blocking_mutex::raw::CriticalSectionRawMutex;
 use embassy_sync::channel::Channel;
